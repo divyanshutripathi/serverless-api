@@ -1,0 +1,174 @@
+service: serverless-api
+
+provider:
+  name: aws
+  runtime: nodejs16.17.x
+  stage: dev
+  region: us-west-1
+  environment:
+    DYNAMODB_TABLE_NAME: ${self:custom.tasksTableName}
+    DYNAMODB_USER_TABLE_NAME: ${self:custom.usersTableName}
+
+custom:
+  tasksTableName: tasks-table-${self:provider.stage}
+  usersTableName: users-table-${self:provider.stage}
+
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  getTask:
+    handler: api.getTask
+    name: get-task
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: task/{taskId}
+          method: GET
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:GetItem"
+        Resource: !GetAtt TasksTable.Arn
+  createTask:
+    handler: api.createTask
+    name: create-task
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: task
+          method: POST
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:PutItem"
+        Resource: !GetAtt TasksTable.Arn
+  updateTask:
+    handler: api.updateTask
+    name: update-task
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: task/{taskId}
+          method: PUT
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt TasksTable.Arn
+  deleteTask:
+    handler: api.deleteTask
+    name: delete-task
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: task/{taskId}
+          method: DELETE
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:DeleteItem"
+        Resource: !GetAtt TasksTable.Arn
+  getAllTasksForAUser:
+    handler: api.getAllTasksForAUser
+    name: get-all-tasks-for-a-user
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: tasks/{userId}
+          method: GET
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:GetItem"
+        Resource: !GetAtt TasksTable.Arn
+  assignTaskToAUser:
+    handler: api.assignTaskToAUser
+    name: assign-task-to-a-user
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: tasks/{taskId}/assign/{userId}
+          method: PUT
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt TasksTable.Arn
+  updateTaskToInprogress:
+    handler: api.updateTaskToInprogress
+    name: update-task-to-inprogress
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: tasks/{taskId}/accept
+          method: PUT
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt TasksTable.Arn
+  updateTaskToComplete:
+    handler: api.updateTaskToComplete
+    name: update-task-to-Complete
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: tasks/{taskId}/complete
+          method: PUT
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt TasksTable.Arn
+  updateTaskToClose:
+    handler: api.updateTaskToClose
+    name: update-task-to-close
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: tasks/{taskId}/close
+          method: PUT
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt TasksTable.Arn
+
+resources:
+  Resources:
+    TasksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tasksTableName}
+        AttributeDefinitions:
+          - AttributeName: taskId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: taskId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    UserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.UsersTableName}
+        AttributeDefinitions:
+          - AttributeName: UserId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: UserId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

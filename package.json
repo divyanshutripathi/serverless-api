@@ -1,0 +1,29 @@
+{
+  "name": "serverless-api",
+  "version": "1.0.0",
+  "description": "Backend Serverless Api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divyanshutripathi/serverless-api.git"
+  },
+  "author": "Divyanshu Tripathi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/divyanshutripathi/serverless-api/issues"
+  },
+  "homepage": "https://github.com/divyanshutripathi/serverless-api#readme",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.18.0",
+    "@aws-sdk/util-dynamodb": "^3.18.0",
+    "install": "^0.13.0",
+    "npm": "^8.19.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "serverless-iam-roles-per-function": "^3.2.0"
+  }
+}
