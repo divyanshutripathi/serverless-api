@@ -5,6 +5,10 @@ const {
   assignedStatus,
   inprogressStatus,
   closeStatus,
+  regexForTitle,
+  managerRole,
+  memberRole,
+  leadRole,
 } = require("./config/const");
 const { v4: uuidv4 } = require("uuid");
 const {
@@ -80,35 +84,53 @@ const createTask = async (event) => {
   try {
     const taskId = uuidv4();
     const body = JSON.parse(event.body);
-    if (checkUser(body.userId)) {
-      const query = {
-        taskId,
-        title: body.title,
-        description: body.description | null,
-        dateCreated: Date.now(),
-        dateStarted: null,
-        dateAssigned: null,
-        dateCompleted: null,
-        dateClosed: null,
-        status: draftStatus,
-        createdBy: body.userId,
-        assignedTo: null,
-      };
+    const user = checkUser(body.userId);
+    if (
+      user &&
+      (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
+        user.data.userRole.toLowerCase() === managerRole.toLowerCase())
+    ) {
+      if (body.title.test(regexForTitle) && body.title > 3 && body.title < 30) {
+        const query = {
+          taskId,
+          title: body.title,
+          description: body.description | null,
+          dateCreated: Date.now(),
+          dateStarted: null,
+          dateAssigned: null,
+          dateCompleted: null,
+          dateClosed: null,
+          status: draftStatus,
+          createdBy: body.userId,
+          assignedTo: null,
+        };
 
-      const params = {
-        TableName: process.env.DYNAMODB_TABLE_NAME,
-        Item: marshall(query || {}),
-      };
-      const createResult = await db.send(new PutItemCommand(params));
+        const params = {
+          TableName: process.env.DYNAMODB_TABLE_NAME,
+          Item: marshall(query || {}),
+        };
+        const createResult = await db.send(new PutItemCommand(params));
 
-      response.body = JSON.stringify({
-        message: "Successfully created Task.",
-        createResult,
-      });
+        response.body = JSON.stringify({
+          message: "Successfully created Task.",
+          createResult,
+        });
+      } else {
+        response.body = JSON.stringify({
+          message:
+            "Title should have only # and _ as special character, should be >3 and <30 characters.",
+        });
+      }
     } else {
-      response.body = JSON.stringify({
-        message: "User not found.",
-      });
+      if (user) {
+        response.body = JSON.stringify({
+          message: "User does not have the Authority",
+        });
+      } else {
+        response.body = JSON.stringify({
+          message: "User not found",
+        });
+      }
     }
   } catch (e) {
     console.error(e);
@@ -126,36 +148,49 @@ const createTask = async (event) => {
 const updateTaskCommon = async (body) => {
   const res = { statusCode: 200 };
   try {
-    const objKeys = Object.keys(body);
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: marshall({ taskId: body.taskId }),
-      UpdateExpression: `SET ${objKeys
-        .map((_, index) => `#key${index} = :value${index}`)
-        .join(", ")}`,
-      ExpressionAttributeNames: objKeys.reduce(
-        (acc, key, index) => ({
-          ...acc,
-          [`#key${index}`]: key,
-        }),
-        {}
-      ),
-      ExpressionAttributeValues: marshall(
-        objKeys.reduce(
+    if (
+      (body.title &&
+        body.title.test(regexForTitle) &&
+        body.title > 3 &&
+        body.title < 30) ||
+      !body.title
+    ) {
+      const objKeys = Object.keys(body);
+      const params = {
+        TableName: process.env.DYNAMODB_TABLE_NAME,
+        Key: marshall({ taskId: body.taskId }),
+        UpdateExpression: `SET ${objKeys
+          .map((_, index) => `#key${index} = :value${index}`)
+          .join(", ")}`,
+        ExpressionAttributeNames: objKeys.reduce(
           (acc, key, index) => ({
             ...acc,
-            [`:value${index}`]: body[key],
+            [`#key${index}`]: key,
           }),
           {}
-        )
-      ),
-    };
-    const updateResult = await db.send(new UpdateItemCommand(params));
+        ),
+        ExpressionAttributeValues: marshall(
+          objKeys.reduce(
+            (acc, key, index) => ({
+              ...acc,
+              [`:value${index}`]: body[key],
+            }),
+            {}
+          )
+        ),
+      };
+      const updateResult = await db.send(new UpdateItemCommand(params));
 
-    res.body = JSON.stringify({
-      message: "Successfully updated Task.",
-      updateResult,
-    });
+      res.body = JSON.stringify({
+        message: "Successfully updated Task.",
+        updateResult,
+      });
+    } else {
+      response.body = JSON.stringify({
+        message:
+          "Title should have only # and _ as special character, should be >3 and <30 characters.",
+      });
+    }
   } catch (e) {
     console.error(e);
     res.statusCode = 500;
@@ -173,13 +208,20 @@ const updateTask = async (event) => {
   let response = { statusCode: 200 };
 
   try {
-    const body = JSON.parse(event.body);
-    if (body.title || body.description) {
-      body.taskId = event.pathParameters.taskId;
-      response = { ...updateTaskCommon(body) };
+    const user = checkUser(body.userId);
+    if (user) {
+      const body = JSON.parse(event.body);
+      if (body.title || body.description) {
+        body.taskId = event.pathParameters.taskId;
+        response = { ...updateTaskCommon(body) };
+      } else {
+        response.body = JSON.stringify({
+          message: "wrong query",
+        });
+      }
     } else {
       response.body = JSON.stringify({
-        message: "wrong query",
+        message: "User not found",
       });
     }
   } catch (e) {
@@ -199,16 +241,33 @@ const deleteTask = async (event) => {
   const response = { statusCode: 200 };
 
   try {
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: marshall({ taskId: event.pathParameters.taskId }),
-    };
-    const deleteResult = await db.send(new DeleteItemCommand(params));
+    const user = checkUser(body.userId);
+    if (
+      user &&
+      (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
+        user.data.userRole.toLowerCase() === managerRole.toLowerCase())
+    ) {
+      const params = {
+        TableName: process.env.DYNAMODB_TABLE_NAME,
+        Key: marshall({ taskId: event.pathParameters.taskId }),
+      };
+      const deleteResult = await db.send(new DeleteItemCommand(params));
 
-    response.body = JSON.stringify({
-      message: "Successfully deleted Task.",
-      deleteResult,
-    });
+      response.body = JSON.stringify({
+        message: "Successfully deleted Task.",
+        deleteResult,
+      });
+    } else {
+      if (user) {
+        response.body = JSON.stringify({
+          message: "User does not have the Authority",
+        });
+      } else {
+        response.body = JSON.stringify({
+          message: "User not found",
+        });
+      }
+    }
   } catch (e) {
     console.error(e);
     response.statusCode = 500;
@@ -226,11 +285,12 @@ const getAllTasksForAUser = async (event) => {
   const response = { statusCode: 200 };
 
   try {
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: marshall({ userId: event.pathParameters.userId }),
-    };
-    if (checkUser(event.pathParameters.userId)) {
+    const user = checkUser(event.pathParameters.userId);
+    if (user) {
+      const params = {
+        TableName: process.env.DYNAMODB_TABLE_NAME,
+        Key: marshall({ userId: event.pathParameters.userId }),
+      };
       const { Items } = await db.send(new GetItemCommand(params));
 
       console.log({ Items });
@@ -241,7 +301,7 @@ const getAllTasksForAUser = async (event) => {
       });
     } else {
       response.body = JSON.stringify({
-        message: "User not found.",
+        message: "User not found",
       });
     }
   } catch (e) {
@@ -262,14 +322,22 @@ const assignTaskToAUser = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    if (checkUser(event.pathParameters.userId)) {
-      if (body.assignedTo) {
+    const user1 = checkUser(body.userId);
+    const user2 = checkUser(event.pathParameters.memberId);
+    if (
+      user1 &&
+      (user1.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
+        user1.data.userRole.toLowerCase() === managerRole.toLowerCase())
+    ) {
+      if (user2) {
         body.taskId = event.pathParameters.taskId;
         body.dateAssigned = Date.now();
-        body.assignedTo = response = { ...(await updateTaskCommon(body)) };
+        body.status = assignedStatus;
+        body.assignedTo = event.pathParameters.memberId;
+        response = { ...(await updateTaskCommon(body)) };
       } else {
         response.body = JSON.stringify({
-          message: "wrong query",
+          message: "member does not exist",
         });
       }
     } else {
@@ -295,16 +363,12 @@ const updateTaskToInprogress = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    if (checkUser(event.pathParameters.userId)) {
-      if (body.status.toLowerCase() === inprogressStatus.toLowerCase()) {
-        body.taskId = event.pathParameters.taskId;
-        body.dateStarted = Date.now();
-        response = { ...(await updateTaskCommon(body)) };
-      } else {
-        response.body = JSON.stringify({
-          message: "wrong query",
-        });
-      }
+    const user = checkUser(body.userId);
+    if (user) {
+      body.taskId = event.pathParameters.taskId;
+      body.dateStarted = Date.now();
+      body.status = inprogressStatus;
+      response = { ...(await updateTaskCommon(body)) };
     } else {
       response.body = JSON.stringify({
         message: "User not found.",
@@ -328,16 +392,12 @@ const updateTaskToComplete = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    if (checkUser(event.pathParameters.userId)) {
-      if (body.status.toLowerCase() === completeStatus.toLowerCase()) {
-        body.taskId = event.pathParameters.taskId;
-        body.dateCompleted = Date.now();
-        response = { ...(await updateTaskCommon(body)) };
-      } else {
-        response.body = JSON.stringify({
-          message: "wrong query",
-        });
-      }
+    const user = checkUser(body.userId);
+    if (user) {
+      body.taskId = event.pathParameters.taskId;
+      body.dateCompleted = Date.now();
+      body.status = completeStatus;
+      response = { ...(await updateTaskCommon(body)) };
     } else {
       response.body = JSON.stringify({
         message: "User not found.",
@@ -361,20 +421,26 @@ const updateTaskToClose = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    if (checkUser(event.pathParameters.userId)) {
-      if (body.status.toLowerCase() === closeStatus.toLowerCase()) {
-        body.taskId = event.pathParameters.taskId;
-        body.dateClosed = Date.now();
-        response = { ...(await updateTaskCommon(body)) };
+    const user = checkUser(body.userId);
+    if (
+      user &&
+      (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
+        user.data.userRole.toLowerCase() === managerRole.toLowerCase())
+    ) {
+      body.taskId = event.pathParameters.taskId;
+      body.status = closeStatus;
+      body.dateClosed = Date.now();
+      response = { ...(await updateTaskCommon(body)) };
+    } else {
+      if (user) {
+        response.body = JSON.stringify({
+          message: "User does not have the Authority",
+        });
       } else {
         response.body = JSON.stringify({
-          message: "wrong query",
+          message: "User not found",
         });
       }
-    } else {
-      response.body = JSON.stringify({
-        message: "User not found.",
-      });
     }
   } catch (e) {
     console.error(e);
