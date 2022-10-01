@@ -2,9 +2,9 @@ service: serverless-api
 
 provider:
   name: aws
-  runtime: nodejs16.17.x
+  runtime: nodejs16.x
   stage: dev
-  region: us-west-1
+  region: ap-south-1
   environment:
     DYNAMODB_TABLE_NAME: ${self:custom.tasksTableName}
     DYNAMODB_USER_TABLE_NAME: ${self:custom.usersTableName}

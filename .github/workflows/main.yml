@@ -39,10 +39,10 @@ jobs:
         continue-on-error: true
         run: npm list
 
-      - name: Use Node.js 16.17.x
+      - name: Use Node.js 16.x
         uses: actions/setup-node@v3
         with:
-          node-version: 16.17.x
+          node-version: 16.x
 
       - name: Install dependencies
         run: npm install
