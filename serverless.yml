@@ -24,7 +24,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: task/createUser
+          path: user
           method: POST
     iamRoleStatements:
       - Effect: "Allow"
