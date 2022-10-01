@@ -91,7 +91,7 @@ const createTask = async (event) => {
       (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
         user.data.userRole.toLowerCase() === managerRole.toLowerCase())
     ) {
-      if (body.title.test(regexForTitle) && body.title > 3 && body.title < 30) {
+      if (regexForTitle.test(body.title) && body.title > 3 && body.title < 30) {
         const query = {
           taskId,
           title: body.title,
