@@ -45,7 +45,9 @@ functions:
       - Effect: "Allow"
         Action:
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   createTask:
     handler: api.createTask
     name: create-task
@@ -60,7 +62,9 @@ functions:
         Action:
           - "dynamodb:PutItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   updateTask:
     handler: api.updateTask
     name: update-task
@@ -75,7 +79,9 @@ functions:
         Action:
           - "dynamodb:UpdateItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   deleteTask:
     handler: api.deleteTask
     name: delete-task
@@ -90,7 +96,9 @@ functions:
         Action:
           - "dynamodb:DeleteItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   getAllTasksForAUser:
     handler: api.getAllTasksForAUser
     name: get-all-tasks-for-a-user
@@ -104,7 +112,9 @@ functions:
       - Effect: "Allow"
         Action:
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   assignTaskToAUser:
     handler: api.assignTaskToAUser
     name: assign-task-to-a-user
@@ -119,7 +129,9 @@ functions:
         Action:
           - "dynamodb:UpdateItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   updateTaskToInprogress:
     handler: api.updateTaskToInprogress
     name: update-task-to-inprogress
@@ -134,7 +146,9 @@ functions:
         Action:
           - "dynamodb:UpdateItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   updateTaskToComplete:
     handler: api.updateTaskToComplete
     name: update-task-to-Complete
@@ -149,7 +163,9 @@ functions:
         Action:
           - "dynamodb:UpdateItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   updateTaskToClose:
     handler: api.updateTaskToClose
     name: update-task-to-close
@@ -164,7 +180,9 @@ functions:
         Action:
           - "dynamodb:UpdateItem"
           - "dynamodb:GetItem"
-        Resource: !GetAtt TasksTable.Arn
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
 
 resources:
   Resources:
