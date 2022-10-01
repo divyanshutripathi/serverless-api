@@ -362,7 +362,7 @@ const getAllTasksForAUser = async (event) => {
     if (user) {
       const params = {
         TableName: process.env.DYNAMODB_TABLE_NAME,
-        Key: marshall({ userId: event.pathParameters.userId }),
+        Key: marshall({ assignedTo: event.pathParameters.userId }),
       };
       const { Items } = await db.send(new GetItemCommand(params));
 
