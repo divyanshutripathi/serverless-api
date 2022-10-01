@@ -250,7 +250,8 @@ const updateTaskCommon = async (query, taskId) => {
       const updateResult = await db.send(new UpdateItemCommand(params));
 
       res.body = JSON.stringify({
-        message: "Successfully updated Task.",
+        message:
+          `Successfully` + query.status ? query.status : "updated" + `Task.`,
         updateResult,
       });
     } else {
