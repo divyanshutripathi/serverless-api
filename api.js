@@ -145,6 +145,69 @@ const createTask = async (event) => {
   return response;
 };
 
+const createUser = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const userId = uuidv4();
+    const body = JSON.parse(event.body);
+    let userRole = body.userRole;
+    //   const user = checkUser(body.email);
+    //   if (
+    //     user &&
+    //     (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
+    //       user.data.userRole.toLowerCase() === managerRole.toLowerCase())
+    //   ) {
+    // if (body.title.test(regexForTitle) && body.title > 3 && body.title < 30) {
+    const query = {
+      userId,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email,
+      dateCreated: Date.now(),
+      userRole,
+    };
+
+    const params = {
+      TableName: process.env.DYNAMODB_USER_TABLE_NAME,
+      Item: marshall(query || {}),
+    };
+    const createResult = await db.send(new PutItemCommand(params));
+
+    response.body = JSON.stringify({
+      message: "Successfully created User.",
+      createResult,
+    });
+    //     } else {
+    //       response.body = JSON.stringify({
+    //         message:
+    //           "Title should have only # and _ as special character, should be >3 and <30 characters.",
+    //       });
+    //     }
+    //   } else {
+    //     if (user) {
+    //       response.body = JSON.stringify({
+    //         message: "User does not have the Authority",
+    //       });
+    //     } else {
+    //       response.body = JSON.stringify({
+    //         message: "User not found",
+    //       });
+    //     }
+    //   }
+  } catch (e) {
+    console.error(e);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: "Failed to create User.",
+      errorMsg: e.message,
+      errorStack: e.stack,
+    });
+  }
+
+  return response;
+};
+
 const updateTaskCommon = async (body) => {
   const res = { statusCode: 200 };
   try {
@@ -464,4 +527,5 @@ module.exports = {
   updateTaskToInprogress,
   updateTaskToComplete,
   updateTaskToClose,
+  createUser,
 };

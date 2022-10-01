@@ -45,6 +45,20 @@ functions:
         Action:
           - "dynamodb:PutItem"
         Resource: !GetAtt TasksTable.Arn
+  createUser:
+    handler: api.createUser
+    name: create-user
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: user
+          method: POST
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:PutItem"
+        Resource: !GetAtt UsersTable.Arn
   updateTask:
     handler: api.updateTask
     name: update-task
