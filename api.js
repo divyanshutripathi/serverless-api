@@ -84,7 +84,8 @@ const createTask = async (event) => {
   try {
     const taskId = uuidv4();
     const body = JSON.parse(event.body);
-    const user = checkUser(body.userId);
+    const user = await checkUser(body.userId);
+    console.log("user : ", user);
     if (
       user &&
       (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
@@ -271,7 +272,7 @@ const updateTask = async (event) => {
   let response = { statusCode: 200 };
 
   try {
-    const user = checkUser(body.userId);
+    const user = await checkUser(body.userId);
     if (user) {
       const body = JSON.parse(event.body);
       if (body.title || body.description) {
@@ -304,7 +305,7 @@ const deleteTask = async (event) => {
   const response = { statusCode: 200 };
 
   try {
-    const user = checkUser(body.userId);
+    const user = await checkUser(body.userId);
     if (
       user &&
       (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
@@ -348,7 +349,7 @@ const getAllTasksForAUser = async (event) => {
   const response = { statusCode: 200 };
 
   try {
-    const user = checkUser(event.pathParameters.userId);
+    const user = await checkUser(event.pathParameters.userId);
     if (user) {
       const params = {
         TableName: process.env.DYNAMODB_TABLE_NAME,
@@ -385,8 +386,8 @@ const assignTaskToAUser = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    const user1 = checkUser(body.userId);
-    const user2 = checkUser(event.pathParameters.memberId);
+    const user1 = await checkUser(body.userId);
+    const user2 = await checkUser(event.pathParameters.memberId);
     if (
       user1 &&
       (user1.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
@@ -426,7 +427,7 @@ const updateTaskToInprogress = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    const user = checkUser(body.userId);
+    const user = await checkUser(body.userId);
     if (user) {
       body.taskId = event.pathParameters.taskId;
       body.dateStarted = Date.now();
@@ -455,7 +456,7 @@ const updateTaskToComplete = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    const user = checkUser(body.userId);
+    const user = await checkUser(body.userId);
     if (user) {
       body.taskId = event.pathParameters.taskId;
       body.dateCompleted = Date.now();
@@ -484,7 +485,7 @@ const updateTaskToClose = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    const user = checkUser(body.userId);
+    const user = await checkUser(body.userId);
     if (
       user &&
       (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
