@@ -214,7 +214,7 @@ const createUser = async (event) => {
 };
 
 const updateTaskCommon = async (query, taskId) => {
-  const res = { statusCode: 200 };
+  let res = { statusCode: 200 };
   try {
     if (
       (query.title &&
@@ -223,10 +223,10 @@ const updateTaskCommon = async (query, taskId) => {
         query.title < 30) ||
       !query.title
     ) {
-      const objKeys = Object.keys(query);
-      const params = {
+      let objKeys = Object.keys(query);
+      let params = {
         TableName: process.env.DYNAMODB_TABLE_NAME,
-        Key: marshall({ taskId: taskId }),
+        Key: marshall({ taskId }),
         UpdateExpression: `SET ${objKeys
           .map((_, index) => `#key${index} = :value${index}`)
           .join(", ")}`,
@@ -390,10 +390,10 @@ const getAllTasksForAUser = async (event) => {
 };
 //TO DO
 const assignTaskToAUser = async (event) => {
-  const response = { statusCode: 200 };
+  let response = { statusCode: 200 };
 
   try {
-    const body = JSON.parse(event.body);
+    let body = JSON.parse(event.body);
     const user1 = await checkUser(body.userId);
     const user2 = await checkUser(event.pathParameters.userId);
     if (
@@ -434,7 +434,7 @@ const assignTaskToAUser = async (event) => {
 };
 // TO DO
 const updateTaskToInprogress = async (event) => {
-  const response = { statusCode: 200 };
+  let response = { statusCode: 200 };
 
   try {
     const body = JSON.parse(event.body);
@@ -465,7 +465,7 @@ const updateTaskToInprogress = async (event) => {
 };
 
 const updateTaskToComplete = async (event) => {
-  const response = { statusCode: 200 };
+  let response = { statusCode: 200 };
 
   try {
     const body = JSON.parse(event.body);
@@ -496,7 +496,7 @@ const updateTaskToComplete = async (event) => {
 };
 
 const updateTaskToClose = async (event) => {
-  const response = { statusCode: 200 };
+  let response = { statusCode: 200 };
 
   try {
     const body = JSON.parse(event.body);
