@@ -17,7 +17,7 @@ plugins:
   - serverless-iam-roles-per-function
 
 functions:
-createUser:
+  createUser:
     handler: api.createUser
     name: create-user
     memorySize: 128 # mb
