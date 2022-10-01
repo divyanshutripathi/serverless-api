@@ -213,20 +213,20 @@ const createUser = async (event) => {
   return response;
 };
 
-const updateTaskCommon = async (body) => {
+const updateTaskCommon = async (query, taskId) => {
   const res = { statusCode: 200 };
   try {
     if (
-      (body.title &&
-        body.title.test(regexForTitle) &&
-        body.title > 3 &&
-        body.title < 30) ||
-      !body.title
+      (query.title &&
+        query.title.test(regexForTitle) &&
+        query.title > 3 &&
+        query.title < 30) ||
+      !query.title
     ) {
-      const objKeys = Object.keys(body);
+      const objKeys = Object.keys(query);
       const params = {
         TableName: process.env.DYNAMODB_TABLE_NAME,
-        Key: marshall({ taskId: body.taskId }),
+        Key: marshall({ taskId: taskId }),
         UpdateExpression: `SET ${objKeys
           .map((_, index) => `#key${index} = :value${index}`)
           .join(", ")}`,
@@ -241,7 +241,7 @@ const updateTaskCommon = async (body) => {
           objKeys.reduce(
             (acc, key, index) => ({
               ...acc,
-              [`:value${index}`]: body[key],
+              [`:value${index}`]: query[key],
             }),
             {}
           )
@@ -254,7 +254,7 @@ const updateTaskCommon = async (body) => {
         updateResult,
       });
     } else {
-      response.body = JSON.stringify({
+      res.body = JSON.stringify({
         message:
           "Title should have only # and _ as special character, should be >3 and <30 characters.",
       });
@@ -280,8 +280,12 @@ const updateTask = async (event) => {
     if (user) {
       const body = JSON.parse(event.body);
       if (body.title || body.description) {
-        body.taskId = event.pathParameters.taskId;
-        response = { ...updateTaskCommon(body) };
+        const query = {
+          title: body.title,
+          description: body.description,
+        };
+        const taskId = event.pathParameters.taskId;
+        response = { ...(await updateTaskCommon(query, taskId)) };
       } else {
         response.body = JSON.stringify({
           message: "wrong query",
@@ -398,11 +402,14 @@ const assignTaskToAUser = async (event) => {
         user1.data.userRole.toLowerCase() === managerRole.toLowerCase())
     ) {
       if (user2) {
-        body.taskId = event.pathParameters.taskId;
-        body.dateAssigned = Date.now();
-        body.status = assignedStatus;
-        body.assignedTo = event.pathParameters.userId;
-        response = { ...(await updateTaskCommon(body)) };
+        const query = {
+          dateAssigned: Date.now(),
+          status: assignedStatus,
+          assignedTo: event.pathParameters.userId,
+        };
+
+        const taskId = event.pathParameters.taskId;
+        response = { ...(await updateTaskCommon(query, taskId)) };
       } else {
         response.body = JSON.stringify({
           message: "member does not exist",
@@ -433,10 +440,12 @@ const updateTaskToInprogress = async (event) => {
     const body = JSON.parse(event.body);
     const user = await checkUser(body.userId);
     if (user) {
-      body.taskId = event.pathParameters.taskId;
-      body.dateStarted = Date.now();
-      body.status = inprogressStatus;
-      response = { ...(await updateTaskCommon(body)) };
+      const query = {
+        dateStarted: Date.now(),
+        status: inprogressStatus,
+      };
+      const taskId = event.pathParameters.taskId;
+      response = { ...(await updateTaskCommon(query, taskId)) };
     } else {
       response.body = JSON.stringify({
         message: "User not found.",
@@ -462,10 +471,12 @@ const updateTaskToComplete = async (event) => {
     const body = JSON.parse(event.body);
     const user = await checkUser(body.userId);
     if (user) {
-      body.taskId = event.pathParameters.taskId;
-      body.dateCompleted = Date.now();
-      body.status = completeStatus;
-      response = { ...(await updateTaskCommon(body)) };
+      const query = {
+        dateCompleted: Date.now(),
+        status: completeStatus,
+      };
+      const taskId = event.pathParameters.taskId;
+      response = { ...(await updateTaskCommon(query, taskId)) };
     } else {
       response.body = JSON.stringify({
         message: "User not found.",
@@ -495,10 +506,12 @@ const updateTaskToClose = async (event) => {
       (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
         user.data.userRole.toLowerCase() === managerRole.toLowerCase())
     ) {
-      body.taskId = event.pathParameters.taskId;
-      body.status = closeStatus;
-      body.dateClosed = Date.now();
-      response = { ...(await updateTaskCommon(body)) };
+      const query = {
+        dateClosed: Date.now(),
+        status: closeStatus,
+      };
+      const taskId = event.pathParameters.taskId;
+      response = { ...(await updateTaskCommon(query, taskId)) };
     } else {
       if (user) {
         response.body = JSON.stringify({
