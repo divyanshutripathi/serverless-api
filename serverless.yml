@@ -162,7 +162,7 @@ resources:
     UserTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.UsersTableName}
+        TableName: ${self:custom.usersTableName}
         AttributeDefinitions:
           - AttributeName: UserId
             AttributeType: S
