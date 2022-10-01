@@ -391,7 +391,7 @@ const assignTaskToAUser = async (event) => {
   try {
     const body = JSON.parse(event.body);
     const user1 = await checkUser(body.userId);
-    const user2 = await checkUser(event.pathParameters.memberId);
+    const user2 = await checkUser(event.pathParameters.userId);
     if (
       user1 &&
       (user1.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
@@ -401,7 +401,7 @@ const assignTaskToAUser = async (event) => {
         body.taskId = event.pathParameters.taskId;
         body.dateAssigned = Date.now();
         body.status = assignedStatus;
-        body.assignedTo = event.pathParameters.memberId;
+        body.assignedTo = event.pathParameters.userId;
         response = { ...(await updateTaskCommon(body)) };
       } else {
         response.body = JSON.stringify({
