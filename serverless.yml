@@ -178,10 +178,10 @@ resources:
       Properties:
         TableName: ${self:custom.usersTableName}
         AttributeDefinitions:
-          - AttributeName: UserId
+          - AttributeName: userId
             AttributeType: S
         KeySchema:
-          - AttributeName: UserId
+          - AttributeName: userId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
