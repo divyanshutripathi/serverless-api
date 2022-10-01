@@ -80,7 +80,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: tasks/{userId}
+          path: tasks/user/{userId}
           method: GET
     iamRoleStatements:
       - Effect: "Allow"
