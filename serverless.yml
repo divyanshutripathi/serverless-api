@@ -112,6 +112,7 @@ functions:
       - Effect: "Allow"
         Action:
           - "dynamodb:GetItem"
+          - "dynamodb:Scan"
         Resource:
           - !GetAtt TasksTable.Arn
           - !GetAtt UsersTable.Arn
