@@ -364,7 +364,7 @@ const getAllTasksForAUser = async (event) => {
         TableName: process.env.DYNAMODB_TABLE_NAME,
         FilterExpression: "assignedTo = :assignedTo",
         ExpressionAttributeValues: {
-          ":userassignedToid": { S: event.pathParameters.userId },
+          ":assignedTo": { S: event.pathParameters.userId },
         },
       };
       const { Items } = await db.send(new ScanCommand(params));
