@@ -228,6 +228,11 @@ resources:
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+            - IndexName: 'email'
+        KeySchema:
+            - AttributeName: 'email'
+              KeyType: 'HASH'
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
