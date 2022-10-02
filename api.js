@@ -362,10 +362,12 @@ const getAllTasksForAUser = async (event) => {
     if (user) {
       const params = {
         TableName: process.env.DYNAMODB_TABLE_NAME,
-        Key: marshall({ assignedTo: event.pathParameters.userId }),
+        FilterExpression: "assignedTo = :assignedTo",
+        ExpressionAttributeValues: {
+          ":userassignedToid": { S: event.pathParameters.userId },
+        },
       };
-      const { Items } = await db.send(new GetItemCommand(params));
-
+      const { Items } = await db.send(new ScanCommand(params));
       console.log({ Items });
       response.body = JSON.stringify({
         message: "Successfully retrieved Task.",
