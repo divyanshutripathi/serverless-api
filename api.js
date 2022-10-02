@@ -201,10 +201,10 @@ const createUser = async (event) => {
       },
     };
     const { user } = await db.send(new ScanCommand(userParams));
+    console.log("user : ", user);
     if (user) {
       response.body = JSON.stringify({
         message: "Email already exist.",
-        createResult,
       });
     } else {
       const params = {
