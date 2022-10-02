@@ -125,7 +125,7 @@ const createTask = async (event) => {
         const query = {
           taskId,
           title: body.title,
-          description: body.description | null,
+          description: body.description,
           dateCreated: Date.now(),
           dateStarted: null,
           dateAssigned: null,
