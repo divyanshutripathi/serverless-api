@@ -107,7 +107,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: tasks/user/{userId}
+          path: task/user/{userId}
           method: GET
     iamRoleStatements:
       - Effect: "Allow"
@@ -141,7 +141,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: tasks/{taskId}/assign/{userId}
+          path: task/{taskId}/assign/{userId}
           method: PUT
     iamRoleStatements:
       - Effect: "Allow"
@@ -158,7 +158,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: tasks/{taskId}/accept
+          path: task/{taskId}/accept
           method: PUT
     iamRoleStatements:
       - Effect: "Allow"
@@ -175,7 +175,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: tasks/{taskId}/complete
+          path: task/{taskId}/complete
           method: PUT
     iamRoleStatements:
       - Effect: "Allow"
@@ -192,7 +192,7 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: tasks/{taskId}/close
+          path: task/{taskId}/close
           method: PUT
     iamRoleStatements:
       - Effect: "Allow"
