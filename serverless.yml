@@ -31,6 +31,7 @@ functions:
         Action:
           - "dynamodb:PutItem"
           - "dynamodb:GetItem"
+          - "dynamodb:Scan"
         Resource: !GetAtt UsersTable.Arn
   getTask:
     handler: api.getTask
