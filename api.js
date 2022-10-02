@@ -194,7 +194,7 @@ const createUser = async (event) => {
     };
 
     const userParams = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
+      TableName: process.env.DYNAMODB_USER_TABLE_NAME,
       FilterExpression: "email = :email",
       ExpressionAttributeValues: {
         ":email": { S: query.email },
