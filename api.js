@@ -197,7 +197,7 @@ const createUser = async (event) => {
       TableName: process.env.DYNAMODB_USER_TABLE_NAME,
       FilterExpression: "email = :email",
       ExpressionAttributeValues: {
-        ":email": { S: query.email },
+        ":email": { S: body.email },
       },
     };
     const { user } = await db.send(new ScanCommand(userParams));
