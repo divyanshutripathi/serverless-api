@@ -371,7 +371,7 @@ const getAllTasksForAUser = async (event) => {
       console.log({ Items });
       response.body = JSON.stringify({
         message: "Successfully retrieved Task.",
-        data: Items ? unmarshall(Items) : {},
+        data: Items ? Items : {},
         rawData: Items,
       });
     } else {
