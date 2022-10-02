@@ -116,6 +116,23 @@ functions:
         Resource:
           - !GetAtt TasksTable.Arn
           - !GetAtt UsersTable.Arn
+  getAllUsers:
+    handler: api.getAllUsers
+    name: get-all-users
+    memorySize: 128 # mb
+    timeout: 5 # seconds
+    events:
+      - http:
+          path: user
+          method: GET
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:Scan"
+        Resource:
+          - !GetAtt TasksTable.Arn
+          - !GetAtt UsersTable.Arn
   assignTaskToAUser:
     handler: api.assignTaskToAUser
     name: assign-task-to-a-user

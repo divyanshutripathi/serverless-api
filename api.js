@@ -78,6 +78,32 @@ const getTask = async (event) => {
   return response;
 };
 
+const getAllUsers = async (event) => {
+  const response = { statusCode: 200 };
+
+  try {
+    const { Items } = await db.send(
+      new ScanCommand({ TableName: process.env.DYNAMODB_USER_TABLE_NAME })
+    );
+
+    response.body = JSON.stringify({
+      message: "Successfully retrieved all users.",
+      data: Items.map((item) => unmarshall(item)),
+      Items,
+    });
+  } catch (e) {
+    console.error(e);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: "Failed to retrieve users.",
+      errorMsg: e.message,
+      errorStack: e.stack,
+    });
+  }
+
+  return response;
+};
+
 const createTask = async (event) => {
   const response = { statusCode: 200 };
 
@@ -118,6 +144,7 @@ const createTask = async (event) => {
 
         response.body = JSON.stringify({
           message: "Successfully created Task.",
+          taskId,
           createResult,
         });
       } else {
@@ -157,13 +184,6 @@ const createUser = async (event) => {
     const userId = uuidv4();
     const body = JSON.parse(event.body);
     let userRole = body.userRole;
-    //   const user = checkUser(body.email);
-    //   if (
-    //     user &&
-    //     (user.data.userRole.toLowerCase() === leadRole.toLowerCase() ||
-    //       user.data.userRole.toLowerCase() === managerRole.toLowerCase())
-    //   ) {
-    // if (body.title.test(regexForTitle) && body.title > 3 && body.title < 30) {
     const query = {
       userId,
       firstName: body.firstName,
@@ -173,33 +193,31 @@ const createUser = async (event) => {
       userRole,
     };
 
-    const params = {
-      TableName: process.env.DYNAMODB_USER_TABLE_NAME,
-      Item: marshall(query || {}),
+    const userParams = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      FilterExpression: "email = :email",
+      ExpressionAttributeValues: {
+        ":email": { S: query.email },
+      },
     };
-    const createResult = await db.send(new PutItemCommand(params));
+    const { user } = await db.send(new ScanCommand(userParams));
+    if (user) {
+      response.body = JSON.stringify({
+        message: "Email already exist.",
+        createResult,
+      });
+    } else {
+      const params = {
+        TableName: process.env.DYNAMODB_USER_TABLE_NAME,
+        Item: marshall(query || {}),
+      };
+      const createResult = await db.send(new PutItemCommand(params));
 
-    response.body = JSON.stringify({
-      message: "Successfully created User.",
-      createResult,
-    });
-    //     } else {
-    //       response.body = JSON.stringify({
-    //         message:
-    //           "Title should have only # and _ as special character, should be >3 and <30 characters.",
-    //       });
-    //     }
-    //   } else {
-    //     if (user) {
-    //       response.body = JSON.stringify({
-    //         message: "User does not have the Authority",
-    //       });
-    //     } else {
-    //       response.body = JSON.stringify({
-    //         message: "User not found",
-    //       });
-    //     }
-    //   }
+      response.body = JSON.stringify({
+        message: "Successfully created User.",
+        createResult,
+      });
+    }
   } catch (e) {
     console.error(e);
     response.statusCode = 500;
@@ -391,7 +409,7 @@ const getAllTasksForAUser = async (event) => {
 
   return response;
 };
-//TO DO
+
 const assignTaskToAUser = async (event) => {
   let response = { statusCode: 200 };
 
@@ -435,7 +453,7 @@ const assignTaskToAUser = async (event) => {
 
   return response;
 };
-// TO DO
+
 const updateTaskToInprogress = async (event) => {
   let response = { statusCode: 200 };
 
@@ -549,4 +567,5 @@ module.exports = {
   updateTaskToComplete,
   updateTaskToClose,
   createUser,
+  getAllUsers,
 };
