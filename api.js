@@ -193,36 +193,20 @@ const createUser = async (event) => {
       userRole,
     };
 
-    console.log("query : ", query);
-    const userParam = {
+    const params = {
       TableName: process.env.DYNAMODB_USER_TABLE_NAME,
-      FilterExpression: "#email = :emailId",
-      ExpressionAttributeNames: {
-        "#email": "email",
-      },
-      ExpressionAttributeValues: {
-        ":emailId": { S: body.email },
-      },
+      Item: marshall(query || {}),
+      ConditionExpression: "attribute_not_exists(email)",
     };
-    const { user } = await db.send(new ScanCommand(userParam));
-    console.log("user : ", user);
-    if (user) {
-      response.body = JSON.stringify({
-        message: "Email already exist.",
-      });
-    } else {
-      const params = {
-        TableName: process.env.DYNAMODB_USER_TABLE_NAME,
-        Item: marshall(query || {}),
-      };
-      const createResult = await db.send(new PutItemCommand(params));
+    const createResult = await db.send(new PutItemCommand(params));
 
-      response.body = JSON.stringify({
-        message: "Successfully created User.",
-        createResult,
-      });
-    }
+    response.body = JSON.stringify({
+      message: "Successfully created User.",
+      createResult,
+    });
   } catch (e) {
+    if (e && e.code === "ConditionalCheckFailedException")
+      console.log("Email Already exists");
     console.error(e);
     response.statusCode = 500;
     response.body = JSON.stringify({
